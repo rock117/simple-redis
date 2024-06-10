@@ -1,4 +1,7 @@
 use crate::error::RedisError;
+use crate::resp::Resp::{Nulls, SimpleStrings};
+use crate::resp::{Resp, RespCodec};
+use futures::SinkExt;
 use std::error::Error;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_stream::StreamExt;
@@ -40,12 +43,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 async fn handle_stream(mut stream: TcpStream) -> Result<(), RedisError> {
-    let mut framed = Framed::new(stream, LinesCodec::new());
+    let mut framed = Framed::new(stream, RespCodec);
     loop {
         match framed.next().await {
+            Some(Ok(Resp::BulkStrings(bulk_string))) => {
+                info!("Received frame: {:?}", bulk_string);
+            }
             Some(Ok(frame)) => {
-                info!("Received frame: {:?}", frame);
-                //  framed.send(response.frame).await?;
+                warn!("invalid command args: {:?}", frame);
+                framed.send(Nulls).await?; // TODO
             }
             Some(Err(e)) => todo!(),
             None => return Ok(()),

@@ -23,3 +23,6 @@ derive_builder = "0.20.0"
 bytes = "1.6.0"
 tokio-util = {version = "0.7.11", features = ["codec"]}
 tokio-stream = "0.1.15"
+num = "0.4.3"
+dashmap = "5.5.3"
+futures = "0.3.30"

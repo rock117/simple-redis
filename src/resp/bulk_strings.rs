@@ -1,13 +1,22 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+use crate::error::RedisError;
+use crate::resp::Serializer;
+
 /// redis bulk stings:
 ///
 ///``` $<length>\r\n<data>\r\n ```
-#[derive(Debug)]
+#[derive(Debug, Hash)]
 pub struct BulkStrings {
     len: usize,
-    data: Vec<u8>
+    data: Vec<u8>,
+}
+
+impl Serializer for BulkStrings {
+    fn serialize(&self) -> Result<Vec<u8>, RedisError> {
+        todo!()
+    }
 }
 
 impl Display for BulkStrings {

@@ -2,8 +2,8 @@ mod get_parser;
 
 use crate::command::RedisCommand;
 use crate::error::RedisError;
-use std::process::Command;
 use crate::resp::BulkStrings;
+use std::process::Command;
 
 trait CommandParser {
     type Command;

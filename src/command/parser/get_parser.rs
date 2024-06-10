@@ -1,8 +1,8 @@
 use crate::command::get::Get;
 use crate::command::parser::CommandParser;
 use crate::error::RedisError;
-use std::process::Command;
 use crate::resp::BulkStrings;
+use std::process::Command;
 
 struct GetParser;
 impl CommandParser for GetParser {
