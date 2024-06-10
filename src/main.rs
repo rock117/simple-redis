@@ -1,8 +1,9 @@
 mod command;
 mod datatype;
+mod error;
 mod executor;
 mod resp;
-
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() {
+    println!("redis server started");
 }
