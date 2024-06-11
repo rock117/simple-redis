@@ -1,21 +1,34 @@
+use bytes::{BufMut, BytesMut};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use crate::error::RedisError;
-use crate::resp::Serializer;
+use crate::resp::{put_clrf, Serializer};
 
 /// redis bulk stings:
 ///
 ///``` $<length>\r\n<data>\r\n ```
-#[derive(Debug, Hash)]
-pub struct BulkStrings {
-    len: usize,
-    data: Vec<u8>,
+#[derive(Debug, Hash, Clone)]
+pub struct BulkStrings(pub Vec<u8>);
+
+impl BulkStrings {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn inner_ref(&self) -> &[u8] {
+        self.0.as_slice()
+    }
 }
 
 impl Serializer for BulkStrings {
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
-        todo!()
+        let mut bytes = BytesMut::new();
+        bytes.put_slice(b"$");
+        bytes.put_slice(self.0.len().to_string().as_bytes());
+        put_clrf(&mut bytes);
+        bytes.put_slice(self.0.as_slice());
+        put_clrf(&mut bytes);
+        Ok(bytes.to_vec())
     }
 }
 

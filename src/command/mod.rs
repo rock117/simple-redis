@@ -1,24 +1,17 @@
-use crate::command::del::Del;
-use crate::command::get::Get;
-use crate::command::set::Set;
+use crate::context::Context;
 use crate::error::RedisError;
 use crate::resp::Resp;
 
+mod append;
 mod del;
+mod exist;
+mod expire;
 mod get;
-mod parser;
+mod hello;
+pub mod parser;
+mod ping;
 mod set;
 
-pub enum RedisCommand {
-    Get(Get),
-    Set(Set),
-    Del(Del),
+pub trait Command {
+    fn execute<T: Context>(&self, context: &T) -> Result<Resp, RedisError>;
 }
-
-impl RedisCommand {
-    pub fn execute(&self) -> Result<Resp, RedisError> {
-        todo!()
-    }
-}
-
-pub fn execute() {}

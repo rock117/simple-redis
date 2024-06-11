@@ -1,15 +1,15 @@
 mod get_parser;
 
-use crate::command::RedisCommand;
+use crate::command::Command;
 use crate::error::RedisError;
 use crate::resp::BulkStrings;
-use std::process::Command;
+pub use get_parser::GetParser;
 
-trait CommandParser {
-    type Command;
-    fn parse(str: &BulkStrings) -> Result<Command, RedisError>;
+pub trait CommandParser {
+    type Command: Command;
+    fn parse(str: &BulkStrings) -> Result<Self::Command, RedisError>;
 }
 
-pub(crate) fn parse(data: &str) -> Result<RedisCommand, RedisError> {
-    todo!()
-}
+// pub(crate) fn parse(data: &str) -> impl Command {
+//     unimplemented!()
+// }

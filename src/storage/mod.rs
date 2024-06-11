@@ -1,9 +1,12 @@
+use crate::resp::Resp;
+
 mod file;
-mod mem;
+pub mod mem;
+pub use mem::MemStorage;
 
-trait Storage {
-    fn put<T>(key: String, value: T);
-    fn get<T>(key: &str) -> Option<T>;
+pub trait Storage {
+    fn put(&self, key: String, value: Resp);
+    fn get(&self, key: &str) -> Option<Resp>;
 
-    fn remove(key: &str);
+    fn remove(&self, key: &str);
 }

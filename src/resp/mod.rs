@@ -1,24 +1,28 @@
 mod arrays;
 mod big_numbers;
-mod bulk_strings;
+mod bulk_errors;
+pub mod bulk_strings;
 mod codec;
 mod integers;
 mod maps;
 mod nulls;
+mod pushes;
 mod simple_errors;
-mod simple_strings;
+pub mod simple_strings;
+mod verbatim_strings;
 
 use crate::error::RedisError;
 use crate::resp::arrays::Arrays;
 pub(crate) use crate::resp::bulk_strings::BulkStrings;
 pub(crate) use crate::resp::codec::RespCodec;
 use crate::resp::simple_errors::SimpleErrors;
-use crate::resp::simple_strings::SimpleStrings;
+pub(crate) use crate::resp::simple_strings::SimpleStrings;
+use bytes::{BufMut, BytesMut};
 use serde::Serialize;
 use std::str::FromStr;
 
 /// https://redis.io/docs/latest/develop/reference/protocol-spec/
-#[derive(Debug, Hash)]
+#[derive(Debug, Clone, Hash)]
 pub enum Resp {
     SimpleStrings(SimpleStrings),
     SimpleErrors(SimpleErrors),
@@ -53,4 +57,8 @@ impl FromStr for Resp {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         todo!()
     }
+}
+
+pub(self) fn put_clrf(bytes: &mut BytesMut) {
+    bytes.put_slice(b"\r\n");
 }

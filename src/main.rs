@@ -1,6 +1,9 @@
+use crate::command::parser::{CommandParser, GetParser};
+use crate::command::Command;
+use crate::context::AppContext;
 use crate::error::RedisError;
 use crate::resp::Resp::{Nulls, SimpleStrings};
-use crate::resp::{Resp, RespCodec};
+use crate::resp::{BulkStrings, Resp, RespCodec};
 use futures::SinkExt;
 use std::error::Error;
 use tokio::net::{TcpListener, TcpStream};
@@ -12,6 +15,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{fmt, EnvFilter, Registry};
 
 mod command;
+mod context;
 mod datatype;
 mod error;
 mod executor;
@@ -46,8 +50,9 @@ async fn handle_stream(mut stream: TcpStream) -> Result<(), RedisError> {
     let mut framed = Framed::new(stream, RespCodec);
     loop {
         match framed.next().await {
-            Some(Ok(Resp::BulkStrings(bulk_string))) => {
-                info!("Received frame: {:?}", bulk_string);
+            Some(Ok(Resp::BulkStrings(bulk_strings))) => {
+                parse_command(&bulk_strings);
+                info!("Received frame: {:?}", bulk_strings);
             }
             Some(Ok(frame)) => {
                 warn!("invalid command args: {:?}", frame);
@@ -58,6 +63,19 @@ async fn handle_stream(mut stream: TcpStream) -> Result<(), RedisError> {
         }
     }
     todo!()
+}
+
+fn parse_command(bulk_strings: &BulkStrings) {
+    if bulk_strings.len() == 0 {
+        return;
+    }
+    match bulk_strings.inner_ref() {
+        s if s.starts_with(b"GET") => {
+            let cmd = GetParser::parse(&bulk_strings).unwrap(); // TODO
+            cmd.execute(&AppContext).unwrap();
+        }
+        &_ => todo!(),
+    };
 }
 
 fn init_log_context() -> Result<(), Box<dyn Error>> {

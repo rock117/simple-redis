@@ -6,6 +6,7 @@ use thiserror::Error;
 pub enum RedisError {
     CommandParseError(CommandParseError),
     IOError(std::io::Error),
+    Other,
 }
 
 #[derive(Clone, Debug)]

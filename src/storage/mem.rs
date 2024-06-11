@@ -1,20 +1,21 @@
+use dashmap::DashMap;
+
 use crate::error::RedisError;
 use crate::resp::Resp;
 use crate::storage::Storage;
-use dashmap::DashMap;
 
-pub(crate) struct MemStorage<V>(DashMap<String, V>);
-impl<V> Storage for MemStorage<V> {
-    fn put<T>(key: String, value: T) {
-        todo!()
+pub struct MemStorage(DashMap<String, Resp>);
+impl Storage for MemStorage {
+    fn put(&self, key: String, value: Resp) {
+        self.0.insert(key, value);
     }
 
-    fn get<T>(key: &str) -> Option<T> {
-        todo!()
+    fn get(&self, key: &str) -> Option<Resp> {
+        self.0.get(key).map(|v| v.clone())
     }
 
-    fn remove(key: &str) {
-        todo!()
+    fn remove(&self, key: &str) {
+        self.0.remove(key);
     }
 }
 

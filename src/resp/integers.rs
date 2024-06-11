@@ -1,5 +1,5 @@
 use crate::error::RedisError;
-use crate::resp::Serializer;
+use crate::resp::{put_clrf, Serializer};
 use bytes::{BufMut, BytesMut};
 
 /// redis Integers
@@ -12,7 +12,7 @@ impl Serializer for Integers {
         bytes.put_slice(b":");
         bytes.put_slice(sign.as_bytes());
         bytes.put_slice(self.0.to_string().as_bytes());
-        bytes.put_slice(b"\r\n");
+        put_clrf(&mut bytes);
         Ok(bytes.to_vec())
     }
 }

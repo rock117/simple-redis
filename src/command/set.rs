@@ -1,3 +1,10 @@
+use crate::command::Command;
+use crate::context::Context;
+use crate::error::RedisError;
+use crate::resp::simple_strings;
+use crate::resp::Resp::{BulkStrings, SimpleStrings};
+use crate::resp::{bulk_strings, Resp};
+use crate::storage::Storage;
 use derive_builder::Builder;
 use std::fmt::Display;
 
@@ -7,7 +14,7 @@ use std::fmt::Display;
 #[derive(Builder, Default)]
 pub struct Set {
     key: String,
-    value: String,
+    value: Vec<u8>,
     get: bool,
     set_key_opt: Option<SetKeyOpt>,
     expired_opt: Option<ExpiredOpt>,
@@ -25,6 +32,17 @@ enum ExpiredOpt {
     EXAT(usize),
     PXAT(usize),
     KEEPTTL,
+}
+
+impl Command for Set {
+    fn execute<T: Context>(&self, context: &T) -> Result<Resp, RedisError> {
+        let storage = context.storage();
+        storage.put(
+            self.key.clone(),
+            BulkStrings(bulk_strings::BulkStrings(self.value.clone())),
+        );
+        Ok(SimpleStrings(simple_strings::SimpleStrings("OK".into())))
+    }
 }
 
 impl Display for Set {
@@ -54,7 +72,13 @@ impl Display for Set {
         if let Some(ExpiredOpt::KEEPTTL) = self.expired_opt {
             opts.push_str(" KEEPTTL");
         }
-        write!(f, "SET {} {}{}", self.key, self.value, opts)
+        write!(
+            f,
+            "SET {} {}{}",
+            self.key,
+            String::from_utf8_lossy(&self.value),
+            opts
+        )
     }
 }
 
