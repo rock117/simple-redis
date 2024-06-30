@@ -12,3 +12,14 @@ impl CommandParser for GetParser {
         todo!()
     }
 }
+trait CommandParser2
+where
+    Self: Sized,
+{
+    fn parse(str: &BulkStrings) -> Result<Self, RedisError>;
+}
+impl CommandParser2 for Get {
+    fn parse(str: &BulkStrings) -> Result<Self, RedisError> {
+        todo!()
+    }
+}

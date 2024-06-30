@@ -8,9 +8,13 @@ use std::collections::HashMap;
 pub(crate) struct Maps(HashMap<Resp, Resp>);
 
 impl Serializer for Maps {
+    fn prefix() -> &'static str {
+        "%"
+    }
+
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
         let mut bytes = BytesMut::new();
-        bytes.put_slice(b"%");
+        bytes.put_slice(Self::prefix().as_bytes());
         bytes.put_slice(self.0.len().to_string().as_bytes());
         for (k, v) in &self.0 {
             bytes.put_slice(k.serialize()?.as_slice());

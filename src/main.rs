@@ -1,11 +1,7 @@
-use crate::command::parser::{CommandParser, GetParser};
-use crate::command::Command;
-use crate::context::AppContext;
-use crate::error::RedisError;
-use crate::resp::Resp::{Nulls, SimpleStrings};
-use crate::resp::{BulkStrings, Resp, RespCodec};
-use futures::SinkExt;
 use std::error::Error;
+
+use futures::SinkExt;
+use simple_redis::stream_handler;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{Framed, LinesCodec};
@@ -14,19 +10,11 @@ use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{fmt, EnvFilter, Registry};
 
-mod command;
-mod context;
-mod datatype;
-mod error;
-mod executor;
-mod resp;
-mod storage;
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     init_log_context()?;
 
-    let addr = "0.0.0.0:16379";
+    let addr = "0.0.0.0:6379";
     info!("Simple-Redis-Server is listening on {}", addr);
     let listener = TcpListener::bind(addr).await?;
 
@@ -34,7 +22,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let (stream, raddr) = listener.accept().await?;
         info!("Accepted connection from: {}", raddr);
         tokio::spawn(async move {
-            match handle_stream(stream).await {
+            match stream_handler::handle_stream(stream).await {
                 Ok(_) => {
                     info!("Connection from {} exited", raddr);
                 }
@@ -46,38 +34,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-async fn handle_stream(mut stream: TcpStream) -> Result<(), RedisError> {
-    let mut framed = Framed::new(stream, RespCodec);
-    loop {
-        match framed.next().await {
-            Some(Ok(Resp::BulkStrings(bulk_strings))) => {
-                parse_command(&bulk_strings);
-                info!("Received frame: {:?}", bulk_strings);
-            }
-            Some(Ok(frame)) => {
-                warn!("invalid command args: {:?}", frame);
-                framed.send(Nulls).await?; // TODO
-            }
-            Some(Err(e)) => todo!(),
-            None => return Ok(()),
-        }
-    }
-    todo!()
-}
-
-fn parse_command(bulk_strings: &BulkStrings) {
-    if bulk_strings.len() == 0 {
-        return;
-    }
-    match bulk_strings.inner_ref() {
-        s if s.starts_with(b"GET") => {
-            let cmd = GetParser::parse(&bulk_strings).unwrap(); // TODO
-            cmd.execute(&AppContext).unwrap();
-        }
-        &_ => todo!(),
-    };
-}
-
 fn init_log_context() -> Result<(), Box<dyn Error>> {
     let filter = EnvFilter::from_default_env().add_directive(LevelFilter::INFO.into());
     let subscriber = Registry::default()
@@ -85,10 +41,10 @@ fn init_log_context() -> Result<(), Box<dyn Error>> {
             fmt::layer()
                 .compact()
                 .with_ansi(true)
-                .with_file(false)
-                .with_line_number(false)
+                .with_file(true)
+                .with_line_number(true)
                 .with_thread_ids(false)
-                .with_target(false),
+                .with_target(true),
         )
         .with(filter);
     tracing::subscriber::set_global_default(subscriber)?;

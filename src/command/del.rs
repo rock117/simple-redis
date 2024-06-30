@@ -12,6 +12,6 @@ impl Display for Del {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let keys = self.keys.clone().into_iter().collect::<Vec<String>>();
         let key_strs = keys.join(" ");
-        write!(f, "GET {}", key_strs)
+        write!(f, "DEL {}", key_strs)
     }
 }

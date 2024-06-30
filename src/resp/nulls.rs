@@ -1,15 +1,22 @@
 use crate::error::RedisError;
 use crate::resp::Serializer;
-use bytes::Bytes;
+use bytes::{BufMut, Bytes, BytesMut};
 
 /// redis simple errors
 /// ``` -Error message\r\n ```
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Hash)]
 pub(crate) struct Nulls;
 
 impl Serializer for Nulls {
+    fn prefix() -> &'static str {
+        "_"
+    }
+
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
-        Ok(Vec::from(b"_\r\n"))
+        let mut bytes = BytesMut::new();
+        bytes.put_slice(Self::prefix().as_bytes());
+        bytes.put_slice(b"\r\n");
+        Ok(bytes.to_vec())
     }
 }
 

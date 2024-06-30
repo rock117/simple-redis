@@ -7,6 +7,7 @@ pub enum RedisError {
     CommandParseError(CommandParseError),
     IOError(std::io::Error),
     Other,
+    UnknowError(String),
 }
 
 #[derive(Clone, Debug)]

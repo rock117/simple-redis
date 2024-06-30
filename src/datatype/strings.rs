@@ -1,4 +1,8 @@
 use crate::error::RedisError;
+use crate::resp;
+use crate::resp::Resp::BulkStrings;
+use crate::resp::{AsResp, Resp};
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Strings(Data);
 
@@ -23,6 +27,19 @@ impl Strings {
         match &mut self.0 {
             Data::String(v) => v.push_str(data.as_str()),
             Data::Number(v) => self.0 = Data::String(format!("{}{}", *v, data)),
+        }
+    }
+}
+
+impl AsResp for Strings {
+    fn as_resp_try(&self) -> Result<Resp, RedisError> {
+        match &self.0 {
+            Data::String(str) => Ok(BulkStrings(resp::bulk_strings::BulkStrings(
+                str.as_bytes().to_vec(),
+            ))),
+            Data::Number(n) => Ok(BulkStrings(resp::bulk_strings::BulkStrings(
+                n.to_string().as_bytes().to_vec(),
+            ))), // TODO use Numbers?
         }
     }
 }

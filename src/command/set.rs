@@ -1,12 +1,17 @@
+use std::fmt::Display;
+
+use derive_builder::Builder;
+
 use crate::command::Command;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::simple_strings;
-use crate::resp::Resp::{BulkStrings, SimpleStrings};
-use crate::resp::{bulk_strings, Resp};
+use crate::resp::Resp;
+use crate::resp::Resp::SimpleStrings;
+use crate::resp::{simple_strings, AsResp};
+use crate::storage::mem::MemStorage;
 use crate::storage::Storage;
-use derive_builder::Builder;
-use std::fmt::Display;
+use anon_enum::{Enum2, Enum5};
+use itertools::Either;
 
 /// redis set command
 ///
@@ -35,12 +40,15 @@ enum ExpiredOpt {
 }
 
 impl Command for Set {
-    fn execute<T: Context>(&self, context: &T) -> Result<Resp, RedisError> {
+    fn execute(&self, context: &dyn Context<Storage = MemStorage>) -> Result<Resp, RedisError> {
         let storage = context.storage();
-        storage.put(
-            self.key.clone(),
-            BulkStrings(bulk_strings::BulkStrings(self.value.clone())),
-        );
+        let data = storage.get(&self.key).clone();
+        // match data { TODO
+        //     None => {
+        //        // let strings = Strings(String::from_utf8(self.value.clone()).unwrap());
+        //     },
+        //     Some(coll) => coll.as_resp_try(),
+        // }
         Ok(SimpleStrings(simple_strings::SimpleStrings("OK".into())))
     }
 }

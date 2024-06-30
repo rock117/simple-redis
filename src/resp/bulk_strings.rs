@@ -21,9 +21,13 @@ impl BulkStrings {
 }
 
 impl Serializer for BulkStrings {
+    fn prefix() -> &'static str {
+        "$"
+    }
+
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
         let mut bytes = BytesMut::new();
-        bytes.put_slice(b"$");
+        bytes.put_slice(Self::prefix().as_bytes());
         bytes.put_slice(self.0.len().to_string().as_bytes());
         put_clrf(&mut bytes);
         bytes.put_slice(self.0.as_slice());

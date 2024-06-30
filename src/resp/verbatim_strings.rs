@@ -10,9 +10,13 @@ pub(crate) struct VerbatimStrings {
 }
 
 impl Serializer for VerbatimStrings {
+    fn prefix() -> &'static str {
+        "="
+    }
+
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
         let mut bytes = BytesMut::new();
-        bytes.put_slice(b"=");
+        bytes.put_slice(Self::prefix().as_bytes());
         bytes.put_slice(self.data.len().to_string().as_bytes());
         put_clrf(&mut bytes);
         bytes.put_slice(self.encoding.as_bytes());
