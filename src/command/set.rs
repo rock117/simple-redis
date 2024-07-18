@@ -5,8 +5,8 @@ use derive_builder::Builder;
 use crate::command::Command;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::Resp;
-use crate::resp::Resp::SimpleStrings;
+use crate::resp::RespFrame;
+use crate::resp::RespFrame::SimpleStrings;
 use crate::resp::{simple_strings, AsResp};
 use crate::storage::mem::MemStorage;
 use crate::storage::Storage;
@@ -40,7 +40,10 @@ enum ExpiredOpt {
 }
 
 impl Command for Set {
-    fn execute(&self, context: &dyn Context<Storage = MemStorage>) -> Result<Resp, RedisError> {
+    fn execute(
+        &self,
+        context: &dyn Context<Storage = MemStorage>,
+    ) -> Result<RespFrame, RedisError> {
         let storage = context.storage();
         let data = storage.get(&self.key).clone();
         // match data { TODO

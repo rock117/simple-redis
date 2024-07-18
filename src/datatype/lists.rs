@@ -1,5 +1,5 @@
 use crate::error::RedisError;
-use crate::resp::{AsResp, Resp};
+use crate::resp::{AsResp, RespFrame};
 
 #[derive(Clone, Debug)]
 pub struct Lists;
@@ -14,7 +14,7 @@ impl Lists {
 }
 
 impl AsResp for Lists {
-    fn as_resp_try(&self) -> Result<Resp, RedisError> {
+    fn as_resp_try(&self) -> Result<RespFrame, RedisError> {
         todo!()
     }
 }

@@ -1,7 +1,7 @@
 use crate::command::get::Get;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::{BulkStrings, Resp};
+use crate::resp::{BulkStrings, RespFrame};
 use crate::storage::mem::MemStorage;
 
 mod append;
@@ -15,7 +15,8 @@ mod ping;
 mod set;
 
 pub trait Command: Send {
-    fn execute(&self, context: &dyn Context<Storage = MemStorage>) -> Result<Resp, RedisError>;
+    fn execute(&self, context: &dyn Context<Storage = MemStorage>)
+        -> Result<RespFrame, RedisError>;
 }
 
 pub fn parse_command(bulk_strings: BulkStrings) -> Option<Box<dyn Command>> {

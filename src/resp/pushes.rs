@@ -1,10 +1,10 @@
 use crate::error::RedisError;
-use crate::resp::{put_clrf, Resp, Serializer};
+use crate::resp::{put_clrf, RespFrame, Serializer};
 use bytes::{BufMut, BytesMut};
 
 /// redis pushes
 /// ` ><number-of-elements>\r\n<element-1>...<element-n> `
-pub(crate) struct Pushes(Vec<Resp>);
+pub(crate) struct Pushes(Vec<RespFrame>);
 impl Serializer for Pushes {
     fn prefix() -> &'static str {
         ">"

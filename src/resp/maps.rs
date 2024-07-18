@@ -1,11 +1,11 @@
 use crate::error::RedisError;
-use crate::resp::{Resp, Serializer};
+use crate::resp::{RespFrame, Serializer};
 use bytes::{BufMut, BytesMut};
 use std::collections::HashMap;
 
 /// redis Maps
 /// ` %<number-of-entries>\r\n<key-1><value-1>...<key-n><value-n> `
-pub(crate) struct Maps(HashMap<Resp, Resp>);
+pub(crate) struct Maps(HashMap<RespFrame, RespFrame>);
 
 impl Serializer for Maps {
     fn prefix() -> &'static str {

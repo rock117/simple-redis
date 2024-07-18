@@ -1,11 +1,11 @@
 use crate::error::RedisError;
-use crate::resp::{put_clrf, Resp, Serializer};
+use crate::resp::{put_clrf, RespFrame, Serializer};
 use bytes::{BufMut, BytesMut};
 
 /// redis arrays
 /// ` *<number-of-elements>\r\n<element-1>...<element-n> `
 #[derive(Debug, Hash, Clone)]
-pub(crate) struct Arrays(pub Vec<Resp>);
+pub(crate) struct Arrays(pub Vec<RespFrame>);
 
 impl Serializer for Arrays {
     fn prefix() -> &'static str {

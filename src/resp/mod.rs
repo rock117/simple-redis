@@ -25,7 +25,7 @@ use tracing::info;
 
 /// https://redis.io/docs/latest/develop/reference/protocol-spec/
 #[derive(Debug, Clone, Hash, strum::IntoStaticStr)]
-pub enum Resp {
+pub enum RespFrame {
     SimpleStrings(SimpleStrings),
     SimpleErrors(SimpleErrors),
     BulkStrings(BulkStrings),
@@ -34,7 +34,7 @@ pub enum Resp {
 }
 
 pub trait AsResp {
-    fn as_resp_try(&self) -> Result<Resp, RedisError>;
+    fn as_resp_try(&self) -> Result<RespFrame, RedisError>;
 }
 
 trait Serializer {
@@ -42,7 +42,7 @@ trait Serializer {
     fn serialize(&self) -> Result<Vec<u8>, RedisError>;
 }
 
-impl Serializer for Resp {
+impl Serializer for RespFrame {
     fn prefix() -> &'static str {
         "" // TODO
     }
@@ -50,17 +50,17 @@ impl Serializer for Resp {
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
         info!("serializer resp: {:?}", self);
         match self {
-            Resp::SimpleStrings(v) => v.serialize(),
-            Resp::SimpleErrors(v) => v.serialize(),
-            Resp::BulkStrings(v) => v.serialize(),
-            Resp::Nulls(v) => v.serialize(),
-            Resp::Arrays(v) => v.serialize(),
+            RespFrame::SimpleStrings(v) => v.serialize(),
+            RespFrame::SimpleErrors(v) => v.serialize(),
+            RespFrame::BulkStrings(v) => v.serialize(),
+            RespFrame::Nulls(v) => v.serialize(),
+            RespFrame::Arrays(v) => v.serialize(),
             _ => unreachable!(),
         }
     }
 }
 
-impl FromStr for Resp {
+impl FromStr for RespFrame {
     type Err = RedisError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {

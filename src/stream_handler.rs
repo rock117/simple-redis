@@ -1,9 +1,9 @@
 use crate::command;
 use crate::context::AppContext;
 use crate::error::RedisError;
-use crate::resp::Resp::{Nulls, SimpleErrors};
+use crate::resp::RespFrame::{Nulls, SimpleErrors};
 use crate::resp::{nulls, simple_errors, SimpleStrings};
-use crate::resp::{Resp, RespCodec};
+use crate::resp::{RespCodec, RespFrame};
 use futures::SinkExt;
 use std::io;
 use tokio::io::Interest;
@@ -27,7 +27,7 @@ pub async fn handle_stream(mut stream: TcpStream) -> Result<(), RedisError> {
             Some(Ok(frame)) => {
                 warn!("get command args: {:?}", frame);
                 framed
-                    .send(Resp::SimpleStrings(SimpleStrings("OK".into())))
+                    .send(RespFrame::SimpleStrings(SimpleStrings("OK".into())))
                     .await?;
             }
             Some(Err(e)) => {

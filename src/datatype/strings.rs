@@ -1,7 +1,7 @@
 use crate::error::RedisError;
 use crate::resp;
-use crate::resp::Resp::BulkStrings;
-use crate::resp::{AsResp, Resp};
+use crate::resp::RespFrame::BulkStrings;
+use crate::resp::{AsResp, RespFrame};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Strings(Data);
@@ -32,7 +32,7 @@ impl Strings {
 }
 
 impl AsResp for Strings {
-    fn as_resp_try(&self) -> Result<Resp, RedisError> {
+    fn as_resp_try(&self) -> Result<RespFrame, RedisError> {
         match &self.0 {
             Data::String(str) => Ok(BulkStrings(resp::bulk_strings::BulkStrings(
                 str.as_bytes().to_vec(),

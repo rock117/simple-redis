@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::command::Command;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::{AsResp, BulkStrings, Resp};
+use crate::resp::{AsResp, BulkStrings, RespFrame};
 use crate::storage::mem::MemStorage;
 use crate::storage::Storage;
 
@@ -15,7 +15,10 @@ pub struct Get {
 }
 
 impl Command for Get {
-    fn execute(&self, context: &dyn Context<Storage = MemStorage>) -> Result<Resp, RedisError> {
+    fn execute(
+        &self,
+        context: &dyn Context<Storage = MemStorage>,
+    ) -> Result<RespFrame, RedisError> {
         let storage = context.storage();
         let data = storage.get(&self.key).clone();
         match data {

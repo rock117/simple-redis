@@ -1,6 +1,6 @@
 use crate::error::{RedisError, RespError};
-use crate::resp::Resp::{Arrays, BulkStrings, Nulls, SimpleErrors, SimpleStrings};
-use crate::resp::{arrays, bulk_strings, Resp, RespCodec};
+use crate::resp::RespFrame::{Arrays, BulkStrings, Nulls, SimpleErrors, SimpleStrings};
+use crate::resp::{arrays, bulk_strings, RespCodec, RespFrame};
 use bytes::{Buf, BytesMut};
 use nom::branch::alt;
 use nom::bytes::streaming::{tag, take, take_while};
@@ -12,7 +12,7 @@ use tokio_util::codec::Decoder;
 use tracing::info;
 
 impl Decoder for RespCodec {
-    type Item = Resp;
+    type Item = RespFrame;
     type Error = RedisError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
@@ -41,7 +41,7 @@ impl Decoder for RespCodec {
     }
 }
 
-fn decode_resp(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_resp(input: &[u8]) -> IResult<&[u8], RespFrame> {
     alt((
         decode_arrays,
         decode_simple_errors,
@@ -51,7 +51,7 @@ fn decode_resp(input: &[u8]) -> IResult<&[u8], Resp> {
     ))(input.as_bytes())
 }
 
-fn decode_arrays(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_arrays(input: &[u8]) -> IResult<&[u8], RespFrame> {
     // *<number-of-elements>\r\n<element-1>...<element-n>
     let (mut remain, (_, digit, _)) = tuple((tag(b"*"), digit1, crlf))(input)?; // parse
     let len = String::from_utf8_lossy(digit)
@@ -66,7 +66,7 @@ fn decode_arrays(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, Arrays(arrays::Arrays(arrays))))
 }
 
-fn decode_simple_errors(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_simple_errors(input: &[u8]) -> IResult<&[u8], RespFrame> {
     let (remain, v) = delimited(
         tag(b"-"),
         take_while(|v| v != b'\r' && v != b'\n'),
@@ -76,7 +76,7 @@ fn decode_simple_errors(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, SimpleErrors(serr)))
 }
 
-fn decode_simple_strings(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_simple_strings(input: &[u8]) -> IResult<&[u8], RespFrame> {
     let (remain, v) = delimited(
         tag(b"+"),
         take_while(|v| v != b'\r' && v != b'\n'),
@@ -86,7 +86,7 @@ fn decode_simple_strings(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, SimpleStrings(sstr)))
 }
 
-fn decode_bulk_strings(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_bulk_strings(input: &[u8]) -> IResult<&[u8], RespFrame> {
     let (remain, (_, digit, _)) = tuple((tag(b"$"), digit1, crlf))(input)?; // parse
     let len = String::from_utf8_lossy(digit)
         .parse::<usize>()
@@ -96,7 +96,7 @@ fn decode_bulk_strings(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, BulkStrings(bstrs)))
 }
 
-fn decode_nulls(input: &[u8]) -> IResult<&[u8], Resp> {
+fn decode_nulls(input: &[u8]) -> IResult<&[u8], RespFrame> {
     let (remain, _) = tag(b"_\r\n")(input)?;
     Ok((remain, Nulls(crate::resp::nulls::Nulls)))
 }
@@ -175,11 +175,11 @@ mod tests {
 
 #[cfg(test)]
 mod resp_codec_test {
-    use bytes::{BufMut, BytesMut};
-    use crate::resp::RespCodec;
     use super::*;
+    use crate::resp::RespCodec;
+    use bytes::{BufMut, BytesMut};
     #[test]
-    fn test_decode_ok(){
+    fn test_decode_ok() {
         let mut decoder = RespCodec;
         let mut buf = BytesMut::new();
         buf.put_slice(b"+OK\r\n");
@@ -189,7 +189,7 @@ mod resp_codec_test {
     }
 
     #[test]
-    fn test_decode_in_complete(){
+    fn test_decode_in_complete() {
         let data = b"+OK";
         let mut decoder = RespCodec;
         let mut buf = BytesMut::new();
@@ -200,7 +200,7 @@ mod resp_codec_test {
     }
 
     #[test]
-    fn test_decode_ok_more_than_a_full_frame(){
+    fn test_decode_ok_more_than_a_full_frame() {
         let data = b"+OK\r\nabc";
         let mut decoder = RespCodec;
         let mut buf = BytesMut::new();
