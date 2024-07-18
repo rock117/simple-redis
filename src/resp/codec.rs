@@ -126,8 +126,11 @@ mod tests {
 
     #[test]
     fn test_decode_nulls() {
-        let nulls = decode_nulls(b"_\r\n");
-        assert_eq!(true, nulls.is_ok())
+        let (remain, resp) = decode_nulls(b"_\r\n").unwrap();
+        let Nulls(_) = resp else {
+            panic!("not SimpleStrings")
+        };
+        assert_eq!(b"", remain);
     }
 
     #[test]
