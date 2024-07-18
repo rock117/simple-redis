@@ -13,13 +13,3 @@ impl Encoder<Resp> for RespCodec {
         Ok(())
     }
 }
-
-fn encode_resp(resp: &Resp) {
-    match resp {
-        Resp::SimpleStrings(_) => {}
-        Resp::SimpleErrors(_) => {}
-        Resp::BulkStrings(_) => {}
-        Resp::Arrays(_) => {}
-        Resp::Nulls(_) => {}
-    }
-}

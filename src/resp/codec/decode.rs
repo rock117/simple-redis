@@ -33,7 +33,7 @@ impl Decoder for RespCodec {
                 Ok(Some(resp))
             }
             Err(e) => match e {
-                Incomplete(v) => Ok(None),
+                Incomplete(_) => Ok(None),
                 Error(_) => Err(RedisError::RespError(RespError::InvalidResp)),
                 Failure(_) => Err(RedisError::RespError(RespError::InvalidResp)),
             },
@@ -101,6 +101,7 @@ fn decode_nulls(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, Nulls(crate::resp::nulls::Nulls)))
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::resp::codec::is_incomplete;
@@ -169,5 +170,43 @@ mod tests {
 
         let arrays = decode_arrays(b"*2\r\n+O\rK\r\n");
         assert_eq!(true, arrays.is_err());
+    }
+}
+
+#[cfg(test)]
+mod resp_codec_test {
+    use bytes::{BufMut, BytesMut};
+    use crate::resp::RespCodec;
+    use super::*;
+    #[test]
+    fn test_decode_ok(){
+        let mut decoder = RespCodec;
+        let mut buf = BytesMut::new();
+        buf.put_slice(b"+OK\r\n");
+        let resp = decoder.decode(&mut buf).unwrap();
+        assert_eq!(true, resp.is_some());
+        assert_eq!(true, buf.is_empty());
+    }
+
+    #[test]
+    fn test_decode_in_complete(){
+        let data = b"+OK";
+        let mut decoder = RespCodec;
+        let mut buf = BytesMut::new();
+        buf.put_slice(data);
+        let resp = decoder.decode(&mut buf).unwrap();
+        assert_eq!(true, resp.is_none());
+        assert_eq!(data.len(), buf.len());
+    }
+
+    #[test]
+    fn test_decode_ok_more_than_a_full_frame(){
+        let data = b"+OK\r\nabc";
+        let mut decoder = RespCodec;
+        let mut buf = BytesMut::new();
+        buf.put_slice(data);
+        let resp = decoder.decode(&mut buf).unwrap();
+        assert_eq!(true, resp.is_some());
+        assert_eq!(b"abc", buf.as_bytes());
     }
 }

@@ -8,9 +8,6 @@ use nom::AsBytes;
 #[derive(Debug, Hash, Clone)]
 pub struct SimpleStrings(pub String);
 
-pub struct SimpleStrings2<T>(pub T)
-where
-    T: 'static + AsRef<str>;
 impl Serializer for SimpleStrings {
     fn prefix() -> &'static str {
         "+"
