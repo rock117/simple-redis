@@ -5,7 +5,7 @@ use bytes::{BufMut, BytesMut};
 /// redis arrays
 /// ` *<number-of-elements>\r\n<element-1>...<element-n> `
 #[derive(Debug, Hash, Clone)]
-pub(crate) struct Arrays(Vec<Resp>);
+pub(crate) struct Arrays(pub Vec<Resp>);
 
 impl Serializer for Arrays {
     fn prefix() -> &'static str {

@@ -2,8 +2,8 @@ use crate::error::RedisError;
 use crate::resp::Serializer;
 use bytes::{BufMut, Bytes, BytesMut};
 
-/// redis simple errors
-/// ``` -Error message\r\n ```
+/// redis null
+/// ``` _\r\n ```
 #[derive(Debug, Copy, Clone, Hash)]
 pub(crate) struct Nulls;
 

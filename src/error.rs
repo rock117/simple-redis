@@ -4,16 +4,15 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum RedisError {
-    CommandParseError(CommandParseError),
     IOError(std::io::Error),
+    RespError(RespError),
     Other,
     UnknowError(String),
 }
-
-#[derive(Clone, Debug)]
-pub(crate) enum CommandParseError {
-    IllegalCommandArgs { cmd: String, msg: String },
-    NotSupportCommand(String),
+#[derive(Debug, Error)]
+pub enum RespError {
+    InvalidResp,
+    InComplete,
 }
 
 impl From<std::io::Error> for RedisError {
@@ -22,6 +21,12 @@ impl From<std::io::Error> for RedisError {
     }
 }
 impl Display for RedisError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
+}
+
+impl Display for RespError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         todo!()
     }

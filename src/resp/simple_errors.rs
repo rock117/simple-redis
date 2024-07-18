@@ -5,7 +5,7 @@ use bytes::{BufMut, BytesMut};
 /// redis simple errors
 /// ``` -Error message\r\n ```
 #[derive(Debug, Hash, Clone)]
-pub(crate) struct SimpleErrors(String);
+pub(crate) struct SimpleErrors(pub String);
 
 impl Serializer for SimpleErrors {
     fn prefix() -> &'static str {

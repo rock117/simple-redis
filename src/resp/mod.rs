@@ -32,7 +32,7 @@ pub enum Resp {
     Arrays(Arrays),
     Nulls(Nulls),
 }
-
+trait Decoder {}
 pub trait AsResp {
     fn as_resp_try(&self) -> Result<Resp, RedisError>;
 }
@@ -40,10 +40,6 @@ pub trait AsResp {
 trait Serializer {
     fn prefix() -> &'static str;
     fn serialize(&self) -> Result<Vec<u8>, RedisError>;
-}
-
-trait RespFirstByte {
-    fn first() -> u8;
 }
 
 impl Serializer for Resp {
