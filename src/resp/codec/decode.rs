@@ -1,49 +1,39 @@
-use std::fs::read_to_string;
-
-use bytes::{Buf, BufMut, BytesMut};
+use crate::error::{RedisError, RespError};
+use crate::resp::Resp::{Arrays, BulkStrings, Nulls, SimpleErrors, SimpleStrings};
+use crate::resp::{arrays, bulk_strings, Resp, RespCodec};
+use bytes::{Buf, BytesMut};
 use nom::branch::alt;
-use nom::bytes::streaming::{is_not, tag, take, take_while, take_while1};
-use nom::character::streaming::{crlf, digit1, none_of};
-use nom::combinator::map_res;
+use nom::bytes::streaming::{tag, take, take_while};
+use nom::character::streaming::{crlf, digit1};
 use nom::sequence::{delimited, pair, tuple};
 use nom::Err::{Error, Failure, Incomplete};
-use nom::{AsBytes, IResult, InputTake};
-use tokio_util::codec::{Decoder, Encoder};
-use tracing::{error, info};
-
-use crate::error::{RedisError, RespError};
-use crate::resp::bulk_strings;
-use crate::resp::Resp::{Arrays, BulkStrings, Nulls, SimpleErrors, SimpleStrings};
-use crate::resp::{arrays, Resp, Serializer};
-
-pub struct RespCodec;
-
-impl Encoder<Resp> for RespCodec {
-    type Error = RedisError;
-
-    fn encode(&mut self, item: Resp, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let bytes = item.serialize().unwrap(); // TODO
-        dst.put_slice(bytes.as_slice());
-        Ok(())
-    }
-}
+use nom::{AsBytes, IResult};
+use tokio_util::codec::Decoder;
+use tracing::info;
 
 impl Decoder for RespCodec {
     type Item = Resp;
     type Error = RedisError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        if src.is_empty() {
+            return Ok(None);
+        }
         let data = src.as_bytes();
         info!(
-            "=== receive data: {}",
+            "=== receive data, len = {}, content = {}",
+            data.len(),
             String::from_utf8(Vec::from(data)).unwrap()
         );
-        let result = decode_resp(src.as_bytes());
 
+        let result = decode_resp(data);
         match result {
-            Ok(v) => Ok(Some(v.1)),
+            Ok((remain, resp)) => {
+                src.advance(src.len() - remain.len());
+                Ok(Some(resp))
+            }
             Err(e) => match e {
-                Incomplete(_) => Ok(None),
+                Incomplete(v) => Ok(None),
                 Error(_) => Err(RedisError::RespError(RespError::InvalidResp)),
                 Failure(_) => Err(RedisError::RespError(RespError::InvalidResp)),
             },
@@ -68,12 +58,12 @@ fn decode_arrays(input: &[u8]) -> IResult<&[u8], Resp> {
         .parse::<usize>()
         .unwrap_or_default();
     let mut arrays = Vec::with_capacity(len);
-    for i in 0..len {
+    for _ in 0..len {
         let (remain_input, resp) = decode_resp(remain)?;
         remain = remain_input;
         arrays.push(resp);
     }
-    Ok((input, Arrays(arrays::Arrays(arrays))))
+    Ok((remain, Arrays(arrays::Arrays(arrays))))
 }
 
 fn decode_simple_errors(input: &[u8]) -> IResult<&[u8], Resp> {
@@ -111,18 +101,9 @@ fn decode_nulls(input: &[u8]) -> IResult<&[u8], Resp> {
     Ok((remain, Nulls(crate::resp::nulls::Nulls)))
 }
 
-fn is_incomplete<I, O>(result: IResult<I, O>) -> bool {
-    match result {
-        Ok(_) => false,
-        Err(err) => match err {
-            Incomplete(_) => true,
-            _ => false,
-        },
-    }
-}
-
 mod tests {
     use super::*;
+    use crate::resp::codec::is_incomplete;
 
     #[test]
     fn test_decode_nulls() {
@@ -177,6 +158,11 @@ mod tests {
         // *<number-of-elements>\r\n<element-1>...<element-n>
         let arrays = decode_arrays(b"*2\r\n+OK\r\n+OK\r\n");
         assert_eq!(true, arrays.is_ok());
+        let (remain, _) = arrays.unwrap();
+        assert_eq!(0, remain.len());
+
+        //  let (remain, _) = decode_arrays(b"*3\r\n+OK\r\n+OK\r\n+OK").unwrap();
+        //  assert_eq!(3, remain.len());
 
         let arrays = decode_arrays(b"*2\r\n+OK\r\n");
         assert_eq!(true, is_incomplete(arrays));

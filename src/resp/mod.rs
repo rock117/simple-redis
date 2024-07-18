@@ -7,7 +7,7 @@ mod integers;
 mod maps;
 pub(crate) mod nulls;
 mod pushes;
-mod simple_errors;
+pub(crate) mod simple_errors;
 pub mod simple_strings;
 mod verbatim_strings;
 
@@ -24,7 +24,7 @@ use std::str::FromStr;
 use tracing::info;
 
 /// https://redis.io/docs/latest/develop/reference/protocol-spec/
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, strum::IntoStaticStr)]
 pub enum Resp {
     SimpleStrings(SimpleStrings),
     SimpleErrors(SimpleErrors),
@@ -32,7 +32,7 @@ pub enum Resp {
     Arrays(Arrays),
     Nulls(Nulls),
 }
-trait Decoder {}
+
 pub trait AsResp {
     fn as_resp_try(&self) -> Result<Resp, RedisError>;
 }
@@ -50,13 +50,13 @@ impl Serializer for Resp {
     fn serialize(&self) -> Result<Vec<u8>, RedisError> {
         info!("serializer resp: {:?}", self);
         match self {
-            Resp::SimpleStrings(v) => v.serialize().unwrap(), // TODO
-            Resp::SimpleErrors(v) => v.serialize().unwrap(),
-            Resp::BulkStrings(v) => v.serialize().unwrap(),
-            Resp::Nulls(v) => v.serialize().unwrap(),
+            Resp::SimpleStrings(v) => v.serialize(),
+            Resp::SimpleErrors(v) => v.serialize(),
+            Resp::BulkStrings(v) => v.serialize(),
+            Resp::Nulls(v) => v.serialize(),
+            Resp::Arrays(v) => v.serialize(),
             _ => unreachable!(),
-        };
-        Ok(vec![])
+        }
     }
 }
 

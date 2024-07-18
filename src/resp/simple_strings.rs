@@ -8,6 +8,9 @@ use nom::AsBytes;
 #[derive(Debug, Hash, Clone)]
 pub struct SimpleStrings(pub String);
 
+pub struct SimpleStrings2<T>(pub T)
+where
+    T: 'static + AsRef<str>;
 impl Serializer for SimpleStrings {
     fn prefix() -> &'static str {
         "+"
@@ -19,5 +22,16 @@ impl Serializer for SimpleStrings {
         bytes.put_slice(self.0.as_bytes());
         put_clrf(&mut bytes);
         Ok(bytes.to_vec())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::resp::{Serializer, SimpleStrings};
+
+    #[test]
+    fn test_serialize() {
+        let str = SimpleStrings("OK".into());
+        assert_eq!(b"+OK\r\n", str.serialize().unwrap().as_slice())
     }
 }
