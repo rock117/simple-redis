@@ -5,13 +5,13 @@ use derive_builder::Builder;
 use crate::command::Command;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::RespFrame;
-use crate::resp::RespFrame::SimpleStrings;
-use crate::resp::{simple_strings, AsResp};
+use crate::resp::simple_strings;
 use crate::storage::mem::MemStorage;
 use crate::storage::Storage;
 use anon_enum::{Enum2, Enum5};
 use itertools::Either;
+use crate::resp::Resp;
+use crate::resp::Resp::SimpleStrings;
 
 /// redis set command
 ///
@@ -40,10 +40,18 @@ enum ExpiredOpt {
 }
 
 impl Command for Set {
+    fn name() -> &'static str {
+        todo!()
+    }
+
+    fn args(&self) -> Vec<String> {
+        todo!()
+    }
+
     fn execute(
         &self,
         context: &dyn Context<Storage = MemStorage>,
-    ) -> Result<RespFrame, RedisError> {
+    ) -> Result<Resp, RedisError> {
         let storage = context.storage();
         let data = storage.get(&self.key).clone();
         // match data { TODO

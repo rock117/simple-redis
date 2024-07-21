@@ -1,8 +1,8 @@
-use nom::Err::Incomplete;
-use nom::IResult;
-
 mod decode;
 mod encode;
+
+use nom::Err::Incomplete;
+use nom::IResult;
 
 pub struct RespCodec;
 
@@ -15,3 +15,5 @@ fn is_incomplete<I, O>(result: IResult<I, O>) -> bool {
         },
     }
 }
+
+

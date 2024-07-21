@@ -1,20 +1,18 @@
-use crate::error::RedisError;
-use crate::resp::{AsResp, RespFrame};
-
 #[derive(Clone, Debug)]
-pub struct Lists;
+pub struct Lists(Vec<Vec<u8>>);
 
 impl Lists {
-    pub fn lpush(&mut self) {}
-    pub fn lpop(&mut self) {}
-    pub fn llen(&mut self) {}
+    pub fn lpush(&mut self, data: Vec<u8>) {
+        self.0.push(data)
+    }
+    pub fn lpop(&mut self) {
+
+    }
+    pub fn llen(&self) -> usize {
+        self.0.len()
+    }
 
     pub async fn blpop(&mut self) {}
     pub async fn blmove(&mut self, another: &mut Lists) {}
 }
 
-impl AsResp for Lists {
-    fn as_resp_try(&self) -> Result<RespFrame, RedisError> {
-        todo!()
-    }
-}

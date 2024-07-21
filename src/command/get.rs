@@ -3,7 +3,8 @@ use std::fmt::Display;
 use crate::command::Command;
 use crate::context::Context;
 use crate::error::RedisError;
-use crate::resp::{AsResp, BulkStrings, RespFrame};
+use crate::resp::BulkStrings;
+use crate::resp::Resp;
 use crate::storage::mem::MemStorage;
 use crate::storage::Storage;
 
@@ -15,23 +16,26 @@ pub struct Get {
 }
 
 impl Command for Get {
+    fn name() -> &'static str {
+        "Get"
+    }
+
+    fn args(&self) -> Vec<String> {
+        vec![]
+    }
+
     fn execute(
         &self,
         context: &dyn Context<Storage = MemStorage>,
-    ) -> Result<RespFrame, RedisError> {
-        let storage = context.storage();
-        let data = storage.get(&self.key).clone();
-        match data {
-            None => Err(RedisError::Other),
-            Some(coll) => coll.as_resp_try(),
-        }
+    ) -> Result<Resp, RedisError> {
+       todo!()
     }
 }
 impl TryFrom<BulkStrings> for Get {
     type Error = RedisError;
 
     fn try_from(value: BulkStrings) -> Result<Self, Self::Error> {
-        let key = String::from_utf8(value.0).unwrap(); // TODO
+        let key = String::from_utf8(value.0).map_err(|e| RedisError::UnknowError(e.to_string()))?;
         Ok(Get { key })
     }
 }

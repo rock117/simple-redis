@@ -1,5 +1,3 @@
-use crate::error::RedisError;
-use crate::resp::{AsResp, RespFrame};
 use crate::storage::Storage;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -23,12 +21,6 @@ impl SortedSets {
             self.0.remove(&item);
         }
         self.0.insert(item);
-    }
-}
-
-impl AsResp for SortedSets {
-    fn as_resp_try(&self) -> Result<RespFrame, RedisError> {
-        todo!()
     }
 }
 
